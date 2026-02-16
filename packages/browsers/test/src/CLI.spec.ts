@@ -3,7 +3,7 @@
  * Copyright 2025 Google Inc.
  * SPDX-License-Identifier: Apache-2.0
  */
-
+import assert from 'node:assert';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -91,5 +91,42 @@ describe('CLI', function () {
       clearTimeout(timeout);
       process.stdout.write = originalStdoutWrite;
     }
+  });
+
+  it('should format output', async () => {
+    const logs: string[] = [];
+    const originalLog = console.log;
+    console.log = (message: string) => {
+      logs.push(message);
+    };
+
+    try {
+      await new CLI(tmpDir).run([
+        'npx',
+        '@puppeteer/browsers',
+        'install',
+        `chrome@${testChromeBuildId}`,
+        `--path=${tmpDir}`,
+        `--base-url=${getServerUrl()}`,
+        '--format={{browser}} {{buildId}} {{path}}',
+      ]);
+    } finally {
+      console.log = originalLog;
+    }
+
+    const found = logs.some(log => {
+      return (
+        log ===
+        `chrome ${testChromeBuildId} ${path.join(
+          tmpDir,
+          'chrome',
+          os.platform() === 'linux' ? `linux-${testChromeBuildId}` : '',
+          'chrome-linux64',
+          'chrome',
+        )}`
+      );
+    });
+
+    assert(found, `Expected output not found in logs: ${JSON.stringify(logs)}`);
   });
 });
