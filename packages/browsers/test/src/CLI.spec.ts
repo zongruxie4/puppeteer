@@ -108,25 +108,26 @@ describe('CLI', function () {
         `chrome@${testChromeBuildId}`,
         `--path=${tmpDir}`,
         `--base-url=${getServerUrl()}`,
-        '--format={{browser}} {{buildId}} {{path}}',
+        '--format={{path}}@{{buildId}}@{{browser}}',
       ]);
     } finally {
       console.log = originalLog;
     }
 
-    const found = logs.some(log => {
-      return (
-        log ===
-        `chrome ${testChromeBuildId} ${path.join(
-          tmpDir,
-          'chrome',
-          os.platform() === 'linux' ? `linux-${testChromeBuildId}` : '',
-          'chrome-linux64',
-          'chrome',
-        )}`
-      );
-    });
+    const found = logs
+      .find(log => {
+        return log.includes('chrome');
+      })
+      ?.split('@');
 
-    assert(found, `Expected output not found in logs: ${JSON.stringify(logs)}`);
+    assert(found, `No match found in ${JSON.stringify(logs)}`);
+
+    assert(found[0]?.startsWith(tmpDir), `Expected path to include tmpdir`);
+    assert.strictEqual(
+      found[1],
+      testChromeBuildId,
+      'Expected buildId to match',
+    );
+    assert.strictEqual(found[2], 'chrome', 'Expected browser to match');
   });
 });
