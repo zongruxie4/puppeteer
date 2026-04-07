@@ -89,6 +89,7 @@ import {
   createConsoleMessage,
   pageBindingInitString,
 } from './utils.js';
+import {WebMCP} from './WebMCP.js';
 import {CdpWebWorker} from './WebWorker.js';
 
 /**
@@ -146,6 +147,7 @@ export class CdpPage extends Page {
   #frameManager: FrameManager;
   #emulationManager: EmulationManager;
   #tracing: Tracing;
+  #webmcp: WebMCP;
   #bindings = new Map<string, Binding>();
   #exposedFunctions = new Map<string, string>();
   #coverage: Coverage;
@@ -172,6 +174,7 @@ export class CdpPage extends Page {
     this.#frameManager = new FrameManager(client, this, this._timeoutSettings);
     this.#emulationManager = new EmulationManager(client);
     this.#tracing = new Tracing(client);
+    this.#webmcp = new WebMCP(client, this.#frameManager);
     this.#coverage = new Coverage(client);
     this.#viewport = null;
 
@@ -293,6 +296,7 @@ export class CdpPage extends Page {
     this.#touchscreen.updateClient(newSession);
     this.#emulationManager.updateClient(newSession);
     this.#tracing.updateClient(newSession);
+    this.#webmcp.updateClient(newSession);
     this.#coverage.updateClient(newSession);
     await this.#frameManager.swapFrameTree(newSession);
     this.#setupPrimaryTargetListeners();
@@ -392,6 +396,7 @@ export class CdpPage extends Page {
         this.#frameManager.initialize(this.#primaryTargetClient),
         this.#primaryTargetClient.send('Performance.enable'),
         this.#primaryTargetClient.send('Log.enable'),
+        this.#webmcp.initialize(),
       ]);
     } catch (err) {
       if (isErrorLike(err) && isTargetClosedError(err)) {
@@ -580,6 +585,10 @@ export class CdpPage extends Page {
 
   override get tracing(): Tracing {
     return this.#tracing;
+  }
+
+  override get webmcp(): WebMCP {
+    return this.#webmcp;
   }
 
   override frames(): Frame[] {

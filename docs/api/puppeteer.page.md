@@ -237,6 +237,23 @@ You can use `tracing.start` and `tracing.stop` to create a trace file which can 
 The constructor for this class is marked as internal. Third-party code should not call the constructor directly or create subclasses that extend the `Tracing` class.
 
 </td></tr>
+<tr><td>
+
+<span id="webmcp">webmcp</span>
+
+</td><td>
+
+`readonly`
+
+</td><td>
+
+[WebMCP](./puppeteer.webmcp.md)
+
+</td><td>
+
+**_(Experimental)_** Experimental API for [WebMCP](https://github.com/webmachinelearning/webmcp). Requires Chrome 148+ with the `--enable-features=WebMCPTesting,DevToolsWebMCPSupport` flags enabled. Supports tool discovery only; invocation is currently unsupported.
+
+</td></tr>
 </tbody></table>
 
 ## Methods

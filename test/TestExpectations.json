@@ -217,6 +217,20 @@
     "comment": "See https://github.com/puppeteer/puppeteer/issues/13163"
   },
   {
+    "testIdPattern": "[webmcp.spec] *",
+    "platforms": ["darwin", "linux", "win32"],
+    "parameters": ["firefox"],
+    "expectations": ["FAIL"],
+    "comment": "Experimental support for WebMCP requires Chrome."
+  },
+  {
+    "testIdPattern": "[webmcp.spec] *",
+    "platforms": ["darwin", "linux", "win32"],
+    "parameters": ["webDriverBiDi"],
+    "expectations": ["FAIL"],
+    "comment": "Experimental support for WebMCP is not supported in BiDi"
+  },
+  {
     "testIdPattern": "[worker.spec] *",
     "platforms": ["darwin", "linux", "win32"],
     "parameters": ["firefox"],
@@ -1850,6 +1864,13 @@
     "parameters": ["chrome", "webDriverBiDi"],
     "expectations": ["SKIP"],
     "comment": "https://github.com/puppeteer/puppeteer/issues/14594"
+  },
+  {
+    "testIdPattern": "[webmcp.spec] *",
+    "platforms": ["darwin", "linux", "win32"],
+    "parameters": ["chrome", "headless", "webDriverBiDiOnly"],
+    "expectations": ["FAIL"],
+    "comment": "Experimental support for WebMCP is not supported in BiDi"
   },
   {
     "testIdPattern": "[worker.spec] Workers can be closed",
