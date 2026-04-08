@@ -93,6 +93,7 @@ import type {
   ClickOptions,
   ElementHandle,
 } from './ElementHandle.js';
+import type {Extension} from './Extension.js';
 import type {
   Frame,
   FrameAddScriptTagOptions,
@@ -3242,6 +3243,14 @@ export abstract class Page extends EventEmitter<PageEvents> {
    * {@inheritDoc BluetoothEmulation}
    */
   abstract get bluetooth(): BluetoothEmulation;
+
+  /**
+   * Triggers an extension action for the given extension.
+   *
+   * @param extension - The extension to trigger the action for.
+   * @public
+   */
+  abstract triggerExtensionAction(extension: Extension): Promise<void>;
 }
 
 /**

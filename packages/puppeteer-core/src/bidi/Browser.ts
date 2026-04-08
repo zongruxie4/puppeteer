@@ -21,6 +21,7 @@ import {
   type DebugInfo,
 } from '../api/Browser.js';
 import {BrowserContextEvent} from '../api/BrowserContext.js';
+import type {Extension} from '../api/Extension.js';
 import type {Page} from '../api/Page.js';
 import type {Target} from '../api/Target.js';
 import type {Connection as CdpConnection} from '../cdp/Connection.js';
@@ -374,5 +375,9 @@ export class BidiBrowser extends Browser {
 
   override isNetworkEnabled(): boolean {
     return this.#networkEnabled;
+  }
+
+  override extensions(): Promise<Map<string, Extension>> {
+    throw new UnsupportedOperation();
   }
 }
