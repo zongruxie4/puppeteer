@@ -5,7 +5,10 @@
  */
 
 import expect from 'expect';
-import type {WebMCPTool} from 'puppeteer-core/internal/cdp/WebMCP.js';
+import type {
+  WebMCPTool,
+  WebMCPToolCall,
+} from 'puppeteer-core/internal/cdp/WebMCP.js';
 
 import {setupSeparateTestBrowserHooks} from '../mocha-utils.js';
 
@@ -266,5 +269,77 @@ describe('Page.webmcp', function () {
     expect(removedTools.length).toBe(1);
     expect(removedTools[0]!.name).toBe('declarative tool name');
     expect(page.webmcp.tools().length).toBe(0);
+  });
+
+  it('should fire toolinvoked events', async () => {
+    const {page, httpsServer} = state;
+    await page.goto(httpsServer.EMPTY_PAGE);
+
+    expect(page.webmcp).toBeDefined();
+
+    const toolAdded = new Promise<WebMCPTool[]>(resolve => {
+      page.webmcp.once('toolsadded', event => {
+        return resolve(event.tools);
+      });
+    });
+
+    // Register a WebMCP tool.
+    await page.evaluate(() => {
+      (window as any).navigator.modelContext.registerTool({
+        name: 'test-tool-1',
+        description: 'A test tool 1',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            text: {type: 'string', description: 'Some text'},
+          },
+          required: ['text'],
+        },
+        execute: () => {},
+      });
+    });
+
+    const [addedTool] = await toolAdded;
+
+    const addedToolCalled = new Promise<WebMCPToolCall>(resolve => {
+      addedTool!.once('toolinvoked', resolve);
+    });
+
+    const toolCalled = new Promise<WebMCPToolCall>(resolve => {
+      page.webmcp.once('toolinvoked', resolve);
+    });
+
+    // Execute WebMCP tool.
+    await page.evaluate(() => {
+      (window as any).navigator.modelContextTesting.executeTool(
+        'test-tool-1',
+        JSON.stringify({text: 'test'}),
+      );
+    });
+
+    const [addedToolCall, toolCall] = await Promise.all([
+      addedToolCalled,
+      toolCalled,
+    ]);
+
+    async function expectToolCall(call: WebMCPToolCall) {
+      expect(call.id).toBeDefined();
+      expect(call.tool).toBeDefined();
+      expect(call.tool.name).toBe('test-tool-1');
+      expect(call.tool.description).toBe('A test tool 1');
+      expect(call.tool.inputSchema).toStrictEqual({
+        type: 'object',
+        properties: {
+          text: {type: 'string', description: 'Some text'},
+        },
+        required: ['text'],
+      });
+      expect(call.tool.frame).toBe(page.mainFrame());
+      expect(await call.tool.formElement).toBeUndefined();
+      expect(call.tool.location).toBeDefined();
+      expect(call.input).toStrictEqual({text: 'test'});
+    }
+    await expectToolCall(addedToolCall);
+    await expectToolCall(toolCall);
   });
 });

@@ -587,6 +587,17 @@ The constructor for this class is marked as internal. Third-party code should no
 </td></tr>
 <tr><td>
 
+<span id="webmcptoolcall">[WebMCPToolCall](./puppeteer.webmcptoolcall.md)</span>
+
+</td><td>
+
+**Remarks:**
+
+The constructor for this class is marked as internal. Third-party code should not call the constructor directly or create subclasses that extend the `WebMCPToolCall` class.
+
+</td></tr>
+<tr><td>
+
 <span id="webworker">[WebWorker](./puppeteer.webworker.md)</span>
 
 </td><td>
