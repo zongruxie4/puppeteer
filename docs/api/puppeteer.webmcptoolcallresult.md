@@ -1,13 +1,13 @@
 ---
-sidebar_label: WebMCPToolResponse
+sidebar_label: WebMCPToolCallResult
 ---
 
-# WebMCPToolResponse interface
+# WebMCPToolCallResult interface
 
 ### Signature
 
 ```typescript
-export interface WebMCPToolResponse
+export interface WebMCPToolCallResult
 ```
 
 ## Properties
@@ -34,6 +34,23 @@ Default
 
 </th></tr></thead>
 <tbody><tr><td>
+
+<span id="call">call</span>
+
+</td><td>
+
+`optional`
+
+</td><td>
+
+[WebMCPToolCall](./puppeteer.webmcptoolcall.md)
+
+</td><td>
+
+</td><td>
+
+</td></tr>
+<tr><td>
 
 <span id="errortext">errorText</span>
 

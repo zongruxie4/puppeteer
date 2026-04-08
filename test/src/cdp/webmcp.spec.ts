@@ -8,7 +8,7 @@ import expect from 'expect';
 import type {
   WebMCPTool,
   WebMCPToolCall,
-  WebMCPToolResponse,
+  WebMCPToolCallResult,
 } from 'puppeteer-core/internal/cdp/WebMCP.js';
 
 import {setupSeparateTestBrowserHooks} from '../mocha-utils.js';
@@ -372,7 +372,7 @@ describe('Page.webmcp', function () {
       page.webmcp.once('toolinvoked', resolve);
     });
 
-    const toolResponded = new Promise<WebMCPToolResponse>(resolve => {
+    const toolResponded = new Promise<WebMCPToolCallResult>(resolve => {
       page.webmcp.once('toolresponded', resolve);
     });
 
@@ -388,6 +388,7 @@ describe('Page.webmcp', function () {
     const response = await toolResponded;
 
     expect(response.id).toBe(call.id);
+    expect(response.call).toBe(call);
     expect(response.status).toBe('Success');
     expect(response.output).toBe('hello world');
     expect(response.errorText).toBeUndefined();
@@ -415,7 +416,7 @@ describe('Page.webmcp', function () {
       page.webmcp.once('toolinvoked', resolve);
     });
 
-    const toolResponded = new Promise<WebMCPToolResponse>(resolve => {
+    const toolResponded = new Promise<WebMCPToolCallResult>(resolve => {
       page.webmcp.once('toolresponded', resolve);
     });
 
@@ -431,6 +432,7 @@ describe('Page.webmcp', function () {
     const response = await toolResponded;
 
     expect(response.id).toBe(call.id);
+    expect(response.call).toBe(call);
     expect(response.status).toBe('Error');
     expect(response.output).toBeUndefined();
     expect(response.errorText).toBe('');
@@ -460,7 +462,7 @@ describe('Page.webmcp', function () {
       });
     });
 
-    const toolResponded = new Promise<WebMCPToolResponse>(resolve => {
+    const toolResponded = new Promise<WebMCPToolCallResult>(resolve => {
       page.webmcp.once('toolresponded', resolve);
     });
 
@@ -475,6 +477,7 @@ describe('Page.webmcp', function () {
     const response = await toolResponded;
 
     expect(response.id).toBeDefined();
+    expect(response.call).toBeUndefined();
     expect(response.status).toBe('Error');
     expect(response.output).toBeUndefined();
     expect(response.errorText).toBe('Tool not found: unknown-tool-name');

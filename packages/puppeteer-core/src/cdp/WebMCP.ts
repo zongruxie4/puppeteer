@@ -172,8 +172,9 @@ export class WebMCPToolCall {
 /**
  * @public
  */
-export interface WebMCPToolResponse {
+export interface WebMCPToolCallResult {
   id: string;
+  call?: WebMCPToolCall;
   status: WebMCPInvocationStatus;
   output?: any;
   errorText?: string;
@@ -194,11 +195,12 @@ export class WebMCP extends EventEmitter<{
   /** Emitted when a tool invocation starts. */
   toolinvoked: WebMCPToolCall;
   /** Emitted when a tool invocation completes or fails. */
-  toolresponded: WebMCPToolResponse;
+  toolresponded: WebMCPToolCallResult;
 }> {
   #client: CDPSession;
   #frameManager: FrameManager;
-  #tools: Map<string, Map<string, WebMCPTool>>;
+  #tools = new Map<string, Map<string, WebMCPTool>>();
+  #pendingCalls = new Map<string, WebMCPToolCall>();
 
   #onToolsAdded = (event: ProtocolWebMCPToolsAddedEvent) => {
     const tools: WebMCPTool[] = [];
@@ -239,13 +241,19 @@ export class WebMCP extends EventEmitter<{
       return;
     }
     const call = new WebMCPToolCall(event.invocationId, tool, event.input);
+    this.#pendingCalls.set(call.id, call);
     tool.emit('toolinvoked', call);
     this.emit('toolinvoked', call);
   };
 
   #onToolResponded = (event: ProtocolWebMCPToolRespondedEvent) => {
-    const response: WebMCPToolResponse = {
+    const call = this.#pendingCalls.get(event.invocationId);
+    if (call) {
+      this.#pendingCalls.delete(event.invocationId);
+    }
+    const response: WebMCPToolCallResult = {
       id: event.invocationId,
+      call: call,
       status: event.status,
       output: event.output,
       errorText: event.errorText,
@@ -255,6 +263,7 @@ export class WebMCP extends EventEmitter<{
   };
 
   #onFrameNavigated = (frame: Frame) => {
+    this.#pendingCalls.clear();
     const frameTools = this.#tools.get(frame._id);
     if (!frameTools) {
       return;
@@ -278,7 +287,6 @@ export class WebMCP extends EventEmitter<{
       this.#onFrameNavigated,
     );
     this.#bindListeners();
-    this.#tools = new Map();
   }
 
   /**
