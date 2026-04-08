@@ -56,6 +56,14 @@ interface ProtocolWebMCPToolInvokedEvent {
   input: string;
 }
 
+interface ProtocolWebMCPToolRespondedEvent {
+  invocationId: string;
+  status: WebMCPInvocationStatus;
+  output?: any;
+  errorText?: string;
+  exception?: Protocol.Runtime.RemoteObject;
+}
+
 /**
  * Represents a registered WebMCP tool available on the page.
  *
@@ -162,6 +170,17 @@ export class WebMCPToolCall {
 }
 
 /**
+ * @public
+ */
+export interface WebMCPToolResponse {
+  id: string;
+  status: WebMCPInvocationStatus;
+  output?: any;
+  errorText?: string;
+  exception?: Protocol.Runtime.RemoteObject;
+}
+
+/**
  * The experimental WebMCP class provides an API for the WebMCP API.
  *
  * @experimental
@@ -174,6 +193,8 @@ export class WebMCP extends EventEmitter<{
   toolsremoved: WebMCPToolsRemovedEvent;
   /** Emitted when a tool invocation starts. */
   toolinvoked: WebMCPToolCall;
+  /** Emitted when a tool invocation completes or fails. */
+  toolresponded: WebMCPToolResponse;
 }> {
   #client: CDPSession;
   #frameManager: FrameManager;
@@ -220,6 +241,17 @@ export class WebMCP extends EventEmitter<{
     const call = new WebMCPToolCall(event.invocationId, tool, event.input);
     tool.emit('toolinvoked', call);
     this.emit('toolinvoked', call);
+  };
+
+  #onToolResponded = (event: ProtocolWebMCPToolRespondedEvent) => {
+    const response: WebMCPToolResponse = {
+      id: event.invocationId,
+      status: event.status,
+      output: event.output,
+      errorText: event.errorText,
+      exception: event.exception,
+    };
+    this.emit('toolresponded', response);
   };
 
   #onFrameNavigated = (frame: Frame) => {
@@ -273,6 +305,8 @@ export class WebMCP extends EventEmitter<{
     this.#client.on('WebMCP.toolsRemoved', this.#onToolsRemoved);
     // @ts-expect-error WebMCP is not yet in the Protocol types.
     this.#client.on('WebMCP.toolInvoked', this.#onToolInvoked);
+    // @ts-expect-error WebMCP is not yet in the Protocol types.
+    this.#client.on('WebMCP.toolResponded', this.#onToolResponded);
   }
 
   /**
@@ -285,6 +319,8 @@ export class WebMCP extends EventEmitter<{
     this.#client.off('WebMCP.toolsRemoved', this.#onToolsRemoved);
     // @ts-expect-error WebMCP is not yet in the Protocol types.
     this.#client.off('WebMCP.toolInvoked', this.#onToolInvoked);
+    // @ts-expect-error WebMCP is not yet in the Protocol types.
+    this.#client.off('WebMCP.toolResponded', this.#onToolResponded);
     this.#client = client;
     this.#bindListeners();
   }
