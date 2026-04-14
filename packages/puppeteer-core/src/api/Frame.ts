@@ -1200,4 +1200,11 @@ export abstract class Frame extends EventEmitter<FrameEvents> {
   abstract waitForDevicePrompt(
     options?: WaitTimeoutOptions,
   ): Promise<DeviceRequestPrompt>;
+
+  /**
+   * This method retrieves the list of realms within this frame
+   *
+   * @public
+   */
+  abstract extensionRealms(): Realm[];
 }

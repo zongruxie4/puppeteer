@@ -5,6 +5,7 @@
  */
 import * as Bidi from 'webdriver-bidi-protocol';
 
+import type {Extension} from '../api/Extension.js';
 import type {JSHandle} from '../api/JSHandle.js';
 import {Realm} from '../api/Realm.js';
 import {WebWorkerEvent} from '../api/WebWorker.js';
@@ -21,6 +22,7 @@ import {
   PuppeteerURL,
   SOURCE_URL_REGEX,
 } from '../common/util.js';
+import {UnsupportedOperation} from '../index-browser.js';
 import type {PuppeteerInjectedUtil} from '../injected/injected.js';
 import {AsyncIterableUtil} from '../util/AsyncIterableUtil.js';
 import {stringifyFunction} from '../util/Function.js';
@@ -286,6 +288,14 @@ export abstract class BidiRealm extends Realm {
     const transferredHandle = this.adoptHandle(handle);
     await handle.dispose();
     return await transferredHandle;
+  }
+
+  extension(): Promise<Extension | null> {
+    throw new UnsupportedOperation();
+  }
+
+  override get origin(): string {
+    throw new UnsupportedOperation();
   }
 }
 

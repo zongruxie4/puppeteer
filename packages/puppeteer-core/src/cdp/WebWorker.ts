@@ -19,6 +19,7 @@ import {debugError} from '../common/util.js';
 
 import {ExecutionContext} from './ExecutionContext.js';
 import {IsolatedWorld} from './IsolatedWorld.js';
+import {MAIN_WORLD} from './IsolatedWorlds.js';
 import type {NetworkManager} from './NetworkManager.js';
 import {createConsoleMessage} from './utils.js';
 
@@ -55,7 +56,7 @@ export class CdpWebWorker extends WebWorker {
     this.#id = targetId;
     this.#client = client;
     this.#targetType = targetType;
-    this.#world = new IsolatedWorld(this, new TimeoutSettings());
+    this.#world = new IsolatedWorld(this, new TimeoutSettings(), MAIN_WORLD);
     this.#emitter = new EventEmitter<WebWorkerEvents>();
 
     this.#client.once('Runtime.executionContextCreated', async event => {

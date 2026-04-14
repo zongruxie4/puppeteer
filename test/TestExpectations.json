@@ -182,6 +182,20 @@
     "comment": "Chrome-specific test"
   },
   {
+    "testIdPattern": "[realms.spec] *",
+    "platforms": ["darwin", "linux", "win32"],
+    "parameters": ["webDriverBiDi"],
+    "expectations": ["SKIP"],
+    "comment": "No extensions in WebDriver BiDi so far"
+  },
+  {
+    "testIdPattern": "[realms.spec] *",
+    "platforms": ["darwin", "linux", "win32"],
+    "parameters": ["chrome-headless-shell"],
+    "expectations": ["SKIP"],
+    "comment": "no extension api for chrome-headless-shell"
+  },
+  {
     "testIdPattern": "[screencast.spec] *",
     "platforms": ["darwin", "linux", "win32"],
     "parameters": ["chrome"],
