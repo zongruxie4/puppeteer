@@ -176,6 +176,10 @@ export class TargetManager
     return this.#attachedTargetsByTargetId;
   }
 
+  getDiscoveredTargetInfos(): ReadonlyMap<string, Protocol.Target.TargetInfo> {
+    return this.#discoveredTargetsByTargetId;
+  }
+
   #setupAttachmentListeners(session: CDPSession | Connection): void {
     const listener = (event: Protocol.Target.AttachedToTargetEvent) => {
       void this.#onAttachedToTarget(session, event);
@@ -260,6 +264,7 @@ export class TargetManager
     const targetInfo = this.#discoveredTargetsByTargetId.get(event.targetId);
     this.#discoveredTargetsByTargetId.delete(event.targetId);
     this.#finishInitializationIfReady(event.targetId);
+
     if (targetInfo?.type === 'service_worker') {
       // Special case for service workers: report TargetGone event when
       // the worker is destroyed.
@@ -339,7 +344,8 @@ export class TargetManager
       await this.#silentDetach(session, parentSession);
       if (
         this.#attachedTargetsByTargetId.has(targetInfo.targetId) ||
-        this.#ignoredTargets.has(targetInfo.targetId)
+        this.#ignoredTargets.has(targetInfo.targetId) ||
+        !this.#discoveredTargetsByTargetId.has(targetInfo.targetId)
       ) {
         return;
       }
