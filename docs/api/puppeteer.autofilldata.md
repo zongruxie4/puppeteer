@@ -2,52 +2,31 @@
 sidebar_label: AutofillData
 ---
 
-# AutofillData interface
+# AutofillData type
 
 ### Signature
 
 ```typescript
-export interface AutofillData
+export type AutofillData =
+  | {
+      creditCard: {
+        number: string;
+        name: string;
+        expiryMonth: string;
+        expiryYear: string;
+        cvc: string;
+      };
+      address?: never;
+    }
+  | {
+      address: {
+        fields: Array<{
+          name: AutofillAddressField | (string & Record<never, never>);
+          value: string;
+        }>;
+      };
+      creditCard?: never;
+    };
 ```
 
-## Properties
-
-<table><thead><tr><th>
-
-Property
-
-</th><th>
-
-Modifiers
-
-</th><th>
-
-Type
-
-</th><th>
-
-Description
-
-</th><th>
-
-Default
-
-</th></tr></thead>
-<tbody><tr><td>
-
-<span id="creditcard">creditCard</span>
-
-</td><td>
-
-</td><td>
-
-&#123; number: string; name: string; expiryMonth: string; expiryYear: string; cvc: string; &#125;
-
-</td><td>
-
-See [Autofill.CreditCard](https://chromedevtools.github.io/devtools-protocol/tot/Autofill/#type-CreditCard).
-
-</td><td>
-
-</td></tr>
-</tbody></table>
+**References:** [AutofillAddressField](./puppeteer.autofilladdressfield.md)
