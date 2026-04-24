@@ -71,7 +71,8 @@ export class CdpBrowser extends BrowserBase {
     networkEnabled = true,
     issuesEnabled = true,
     handleDevToolsAsPage = false,
-    blockList?: string[],
+    blocklist?: string[],
+    allowlist?: string[],
   ): Promise<CdpBrowser> {
     const browser = new CdpBrowser(
       connection,
@@ -85,8 +86,20 @@ export class CdpBrowser extends BrowserBase {
       networkEnabled,
       issuesEnabled,
       handleDevToolsAsPage,
-      blockList,
+      blocklist,
+      allowlist,
     );
+
+    if (allowlist) {
+      const version = await browser.#getVersion();
+      const majorVersion = parseInt(
+        version.product.match(/\d+/)?.[0] ?? '0',
+        10,
+      );
+      if (majorVersion < 149) {
+        throw new Error('The allowlist option require Chrome 149 or greater.');
+      }
+    }
     if (acceptInsecureCerts) {
       await connection.send('Security.setIgnoreCertificateErrors', {
         ignore: true,
@@ -121,7 +134,8 @@ export class CdpBrowser extends BrowserBase {
     networkEnabled = true,
     issuesEnabled = true,
     handleDevToolsAsPage = false,
-    networkConditions?: string[],
+    blocklist?: string[],
+    allowlist?: string[],
   ) {
     super();
     this.#networkEnabled = networkEnabled;
@@ -142,7 +156,8 @@ export class CdpBrowser extends BrowserBase {
       this.#createTarget,
       this.#targetFilterCallback,
       waitForInitiallyDiscoveredTargets,
-      networkConditions,
+      blocklist,
+      allowlist,
     );
     this.#defaultContext = new CdpBrowserContext(this.#connection, this);
     for (const contextId of contextIds) {

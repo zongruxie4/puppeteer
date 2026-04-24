@@ -14,7 +14,7 @@ describe('Network Restrictions', function () {
   it('should block page.goto when the destination is in the blocklist', async () => {
     const {page, close, server} = await launch(
       {
-        blockList: ['*://*:*/empty.html'],
+        blocklist: ['*://*:*/empty.html'],
       },
       {createContext: true},
     );
@@ -39,7 +39,7 @@ describe('Network Restrictions', function () {
   it('should block window.location.href navigation to URLs in the blocklist', async () => {
     const {page, close, server} = await launch(
       {
-        blockList: ['*://*:*/empty.html'],
+        blocklist: ['*://*:*/empty.html'],
       },
       {createContext: true},
     );
@@ -67,7 +67,7 @@ describe('Network Restrictions', function () {
   it('should fail fetch requests to URLs in the blocklist', async () => {
     const {page, close, server} = await launch(
       {
-        blockList: ['*://*:*/empty.html'],
+        blocklist: ['*://*:*/empty.html'],
       },
       {createContext: true},
     );
@@ -96,7 +96,7 @@ describe('Network Restrictions', function () {
   it('should prevent loading of blocklisted subresources (e.g., images)', async () => {
     const {page, close, server} = await launch(
       {
-        blockList: ['*://*:*/pptr.png'],
+        blocklist: ['*://*:*/pptr.png'],
       },
       {createContext: true},
     );
@@ -156,7 +156,7 @@ describe('Network Restrictions', function () {
 
       connectedBrowser = await puppeteer.connect({
         browserWSEndpoint: wsEndpoint,
-        blockList: ['*://*:*/empty.html'],
+        blocklist: ['*://*:*/empty.html'],
       });
 
       const targets = connectedBrowser.targets();
@@ -173,11 +173,91 @@ describe('Network Restrictions', function () {
     }
   });
 
+  it('should only allow navigation to URLs in the allowlist', async () => {
+    const {page, close, server} = await launch(
+      {
+        allowlist: ['*://*:*/empty.html'],
+      },
+      {createContext: true},
+    );
+
+    try {
+      const allowedUrl = server.PREFIX + '/empty.html';
+      const blockedUrl = server.PREFIX + '/title.html';
+
+      await page.goto(allowedUrl);
+      let error: Error | undefined;
+      await page.goto(blockedUrl).catch(e => {
+        return (error = e);
+      });
+      expect(page.url()).not.toBe(blockedUrl);
+      expect(error).toBeDefined();
+      expect(error?.message).toContain('net::ERR_INTERNET_DISCONNECTED');
+    } finally {
+      await close();
+    }
+  });
+
+  it('should throw an error when both blocklist and allowlist are specified', async () => {
+    let error: Error | undefined;
+    await launch(
+      {
+        blocklist: ['*://*:*/empty.html'],
+        allowlist: ['*://*:*/empty.html'],
+      },
+      {createContext: true},
+    ).catch(e => {
+      return (error = e);
+    });
+
+    expect(error).toBeDefined();
+    expect(error?.message).toContain(
+      'Cannot specify both blocklist and allowlist',
+    );
+
+    const {browser, close} = await launch({}, {createContext: false});
+    try {
+      const wsEndpoint = browser.wsEndpoint();
+      let connectError: Error | undefined;
+      await puppeteer
+        .connect({
+          browserWSEndpoint: wsEndpoint,
+          blocklist: ['*://*:*/empty.html'],
+          allowlist: ['*://*:*/empty.html'],
+        })
+        .catch(e => {
+          return (connectError = e);
+        });
+
+      expect(connectError).toBeDefined();
+      expect(connectError?.message).toContain(
+        'Cannot specify both blocklist and allowlist',
+      );
+    } finally {
+      await close();
+    }
+  });
+
+  it('should throw an error for an invalid pattern', async () => {
+    let error: Error | undefined;
+    await launch(
+      {
+        blocklist: ['(invalid pattern'],
+      },
+      {createContext: true},
+    ).catch(e => {
+      return (error = e);
+    });
+
+    expect(error).toBeDefined();
+    expect(error?.message.includes('URLPattern')).toBeTruthy();
+  });
+
   it('should not block chrome://version/ even if it matches blocklist', async () => {
     const chromeUrl = 'chrome://version/';
     const {page, close} = await launch(
       {
-        blockList: [chromeUrl],
+        blocklist: [chromeUrl],
       },
       {createContext: true},
     );
