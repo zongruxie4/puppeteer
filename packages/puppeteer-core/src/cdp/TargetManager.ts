@@ -548,7 +548,8 @@ export class TargetManager
     }
 
     await session.send('Network.emulateNetworkConditionsByRule', {
-      offline: true, // 'offline' will be deprecated in Chrome 149. Retained for compatibility with existing blocklist functionality.
+      // @ts-expect-error offline cannot be undefined before M149.
+      offline: this.#blocklist.length > 0 ? true : undefined,
       matchedNetworkConditions,
     });
   };
