@@ -8,7 +8,7 @@ import expect from 'expect';
 import puppeteer from 'puppeteer/internal/puppeteer.js';
 
 import {launch} from '../mocha-utils.js';
-import {html} from '../utils.js';
+import {attachFrame, html} from '../utils.js';
 
 describe('Network Restrictions', function () {
   it('should block page.goto when the destination is in the blocklist', async () => {
@@ -404,6 +404,87 @@ describe('Network Restrictions', function () {
 
       // Navigation should succeed as chrome:// URLs usually bypass the network
       expect(page.url()).toBe(chromeUrl);
+    } finally {
+      await close();
+    }
+  });
+
+  it('should block iframe content from loading if the iframe URL is in the blocklist', async () => {
+    const {page, close, server} = await launch(
+      {
+        blocklist: ['*://*:*/frames/frame.html'],
+      },
+      {createContext: true},
+    );
+
+    try {
+      await page.goto(server.PREFIX + '/frames/one-frame.html');
+      const frame = page.frames().find(f => {
+        return f !== page.mainFrame();
+      })!;
+
+      const content = await frame.content();
+      expect(content).not.toContain("Hi, I'm frame");
+    } finally {
+      await close();
+    }
+  });
+
+  it('should block out-of-process iframe (OOPIF) content from loading if the iframe URL is in the blocklist', async () => {
+    const {page, close, server} = await launch(
+      {
+        blocklist: ['*://*:*/frames/frame.html'],
+        args: ['--site-per-process'],
+      },
+      {createContext: true},
+    );
+
+    try {
+      await page.goto(server.EMPTY_PAGE);
+
+      const framePromise = page.waitForFrame(frame => {
+        return frame.url().endsWith('/frame.html');
+      });
+
+      await attachFrame(
+        page,
+        'frame1',
+        server.CROSS_PROCESS_PREFIX + '/frames/frame.html',
+      );
+
+      const frame = await framePromise;
+      const content = await frame.content();
+      expect(content).not.toContain("Hi, I'm frame");
+    } finally {
+      await close();
+    }
+  });
+
+  it('should block fetch requests from within local iframes to URLs in the blocklist', async () => {
+    const {page, close, server} = await launch(
+      {
+        blocklist: ['*://*:*/empty.html'],
+      },
+      {createContext: true},
+    );
+
+    try {
+      await page.goto(server.PREFIX + '/frames/one-frame.html');
+      const frame = page.frames().find(f => {
+        return f !== page.mainFrame();
+      })!;
+
+      const fetchError = await frame.evaluate(async url => {
+        try {
+          await fetch(url);
+          return null;
+        } catch (e) {
+          return (e as Error).message;
+        }
+      }, server.PREFIX + '/empty.html');
+
+      expect(fetchError).toBeTruthy();
+      expect(fetchError).toContain('Failed to fetch');
     } finally {
       await close();
     }
