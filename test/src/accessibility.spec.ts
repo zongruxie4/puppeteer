@@ -91,89 +91,34 @@ describe('Accessibility', function () {
     const {page, server} = await getTestState();
     await page.goto(server.PREFIX + '/a11y/landmarks.html');
     const snapshot = await page.accessibility.snapshot();
-    expect(snapshot).toMatchObject({
-      role: 'RootWebArea',
-      name: 'HTML Elements Showcase',
-      children: [
-        {
-          role: 'banner',
-          name: '',
-          children: [
-            {
-              role: 'heading',
-              name: 'HTML Elements Showcase',
-              level: 1,
-            },
-            {
-              role: 'navigation',
-              name: '',
-              children: [
-                {
-                  role: 'link',
-                  name: 'Forms',
-                  children: [
-                    {
-                      role: 'StaticText',
-                      name: 'Forms',
-                    },
-                  ],
-                },
-                {
-                  role: 'link',
-                  name: 'Media',
-                  children: [
-                    {
-                      role: 'StaticText',
-                      name: 'Media',
-                    },
-                  ],
-                },
-                {
-                  role: 'link',
-                  name: 'Interactive',
-                  children: [
-                    {
-                      role: 'StaticText',
-                      name: 'Interactive',
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-        {
-          role: 'main',
-          name: '',
-          children: [
-            {
-              role: 'search',
-              name: '',
-            },
-          ],
-        },
-        {
-          role: 'complementary',
-          name: '',
-          children: [
-            {
-              role: 'StaticText',
-              name: 'complementary',
-            },
-          ],
-        },
-        {
-          role: 'contentinfo',
-          name: '',
-          children: [
-            {
-              role: 'StaticText',
-              name: 'contentinfo',
-            },
-          ],
-        },
-      ],
-    });
+
+    try {
+      expect(snapshot).toMatchObject(
+        buildTestAxTree([
+          // State before 149.0.7819.0. TODO: remove after roll
+          {
+            role: 'form',
+            name: '',
+            children: [
+              {
+                role: 'search',
+                name: '',
+              },
+            ],
+          },
+        ]),
+      );
+    } catch {
+      // State after 149.0.7819.0
+      expect(snapshot).toMatchObject(
+        buildTestAxTree([
+          {
+            role: 'search',
+            name: '',
+          },
+        ]),
+      );
+    }
   });
 
   it('should report uninteresting nodes', async () => {
@@ -1011,3 +956,89 @@ describe('Accessibility', function () {
     });
   });
 });
+interface TestAXNode {
+  role: string;
+  name: string;
+  children?: TestAXNode[];
+}
+
+function buildTestAxTree(children: TestAXNode[]) {
+  return {
+    role: 'RootWebArea',
+    name: 'HTML Elements Showcase',
+    children: [
+      {
+        role: 'banner',
+        name: '',
+        children: [
+          {
+            role: 'heading',
+            name: 'HTML Elements Showcase',
+            level: 1,
+          },
+          {
+            role: 'navigation',
+            name: '',
+            children: [
+              {
+                role: 'link',
+                name: 'Forms',
+                children: [
+                  {
+                    role: 'StaticText',
+                    name: 'Forms',
+                  },
+                ],
+              },
+              {
+                role: 'link',
+                name: 'Media',
+                children: [
+                  {
+                    role: 'StaticText',
+                    name: 'Media',
+                  },
+                ],
+              },
+              {
+                role: 'link',
+                name: 'Interactive',
+                children: [
+                  {
+                    role: 'StaticText',
+                    name: 'Interactive',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        role: 'main',
+        name: '',
+        children,
+      },
+      {
+        role: 'complementary',
+        name: '',
+        children: [
+          {
+            role: 'StaticText',
+            name: 'complementary',
+          },
+        ],
+      },
+      {
+        role: 'contentinfo',
+        name: '',
+        children: [
+          {
+            role: 'StaticText',
+            name: 'contentinfo',
+          },
+        ],
+      },
+    ],
+  };
+}
